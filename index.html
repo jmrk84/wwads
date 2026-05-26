@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f86c6">
+  <title>wwads — weather without ads</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="cities-bar">
+    <div class="chips" id="chips" role="tablist" aria-label="Saved cities"></div>
+    <div class="bar-actions">
+      <button id="btn-add-current" class="icon-btn" aria-label="Add current location" title="Add current location">📍</button>
+      <button id="btn-add-search" class="icon-btn" aria-label="Add city by search" title="Add city">+</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab active" data-tab="forecast" role="tab" aria-selected="true">Forecast</button>
+    <button class="tab" data-tab="radar" role="tab" aria-selected="false">Radar</button>
+  </nav>
+
+  <main>
+    <section id="empty-state" class="empty-state" hidden>
+      <div class="empty-icon" aria-hidden="true">⛅</div>
+      <h1>No cities yet</h1>
+      <p>Add one to get started.</p>
+      <div class="empty-actions">
+        <button class="btn primary" id="empty-add-current">📍 Use my location</button>
+        <button class="btn" id="empty-add-search">+ Search for a city</button>
+      </div>
+    </section>
+
+    <section id="forecast-view" class="view" hidden>
+      <div class="current" id="current"></div>
+      <h2 class="section-title">Next 24 hours</h2>
+      <div class="hourly" id="hourly"></div>
+      <h2 class="section-title">5-day forecast</h2>
+      <div class="daily" id="daily"></div>
+      <p class="attribution">Weather data © <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a></p>
+    </section>
+
+    <section id="radar-view" class="view" hidden>
+      <div id="map" class="map" aria-label="Rain radar map"></div>
+      <div class="radar-controls">
+        <button id="radar-play" class="icon-btn" aria-label="Play/Pause animation" title="Play/Pause">⏸</button>
+        <input type="range" id="radar-slider" min="0" max="0" value="0" step="1" aria-label="Radar timeline">
+        <span id="radar-time" class="radar-time" aria-live="polite"></span>
+      </div>
+      <p class="attribution">Radar © <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a></p>
+    </section>
+  </main>
+
+  <div id="toast-host" aria-live="polite" aria-atomic="false"></div>
+
+  <dialog id="search-dialog" class="dialog" aria-label="Search for a city">
+    <header>
+      <h2>Add city</h2>
+      <button type="button" class="icon-btn close" id="search-close" aria-label="Close">×</button>
+    </header>
+    <input type="search" id="search-input" placeholder="Search city…" autocomplete="off" enterkeyhint="search">
+    <ul id="search-results" class="search-results" role="listbox"></ul>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

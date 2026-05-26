@@ -1,0 +1,172 @@
+const APP_VERSION = 'v1';
+const SHELL_CACHE = `wwads-shell-${APP_VERSION}`;
+const DATA_CACHE  = `wwads-data-${APP_VERSION}`;
+const TILE_CACHE  = `wwads-tiles-${APP_VERSION}`;
+
+const SHELL_FILES = [
+  './',
+  'index.html',
+  'styles.css',
+  'manifest.webmanifest',
+  'app.js',
+  'cities.js',
+  'weather.js',
+  'ui.js',
+  'radar.js',
+  'vendor/leaflet/leaflet.css',
+  'vendor/leaflet/leaflet.js',
+  'vendor/leaflet/images/marker-icon.png',
+  'vendor/leaflet/images/marker-icon-2x.png',
+  'vendor/leaflet/images/marker-shadow.png',
+  'vendor/leaflet/images/layers.png',
+  'vendor/leaflet/images/layers-2x.png',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-maskable-512.png'
+];
+
+const DATA_HOSTS = [
+  'api.open-meteo.com',
+  'geocoding-api.open-meteo.com',
+  'api.bigdatacloud.net',
+  'api.rainviewer.com'
+];
+const TILE_HOSTS = [
+  'tile.openstreetmap.org',
+  'tilecache.rainviewer.com'
+];
+const TILE_CACHE_MAX = 400;
+
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(SHELL_CACHE);
+    // addAll is atomic; if any fail it fails. Add individually to be resilient.
+    await Promise.all(SHELL_FILES.map(async (file) => {
+      try { await cache.add(file); } catch (err) {
+        console.warn('[SW] failed to precache', file, err);
+      }
+    }));
+    self.skipWaiting();
+  })());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => {
+      if (k.startsWith('wwads-') && ![SHELL_CACHE, DATA_CACHE, TILE_CACHE].includes(k)) {
+        return caches.delete(k);
+      }
+    }));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+
+  // Navigation: network-first w/ shell fallback for offline
+  if (req.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const res = await fetch(req);
+        return res;
+      } catch {
+        const cache = await caches.open(SHELL_CACHE);
+        return (await cache.match('./')) || (await cache.match('index.html')) || Response.error();
+      }
+    })());
+    return;
+  }
+
+  if (url.origin === self.location.origin) {
+    // App shell: cache-first
+    event.respondWith((async () => {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      try {
+        const res = await fetch(req);
+        return res;
+      } catch {
+        return Response.error();
+      }
+    })());
+    return;
+  }
+
+  if (TILE_HOSTS.some(h => url.hostname === h || url.hostname.endsWith('.' + h))) {
+    event.respondWith(cacheFirst(req, TILE_CACHE, TILE_CACHE_MAX));
+    return;
+  }
+
+  if (DATA_HOSTS.some(h => url.hostname === h || url.hostname.endsWith('.' + h))) {
+    event.respondWith(networkFirst(req, DATA_CACHE));
+    return;
+  }
+
+  // Default: pass-through
+});
+
+async function networkFirst(req, cacheName) {
+  const cache = await caches.open(cacheName);
+  try {
+    const fresh = await fetch(req);
+    if (fresh.ok) {
+      // Avoid caching huge or opaque error responses
+      cache.put(req, fresh.clone()).catch(() => {});
+    }
+    return fresh;
+  } catch (err) {
+    const cached = await cache.match(req);
+    if (cached) {
+      // Tag the response so the app can show a stale badge
+      const body = await cached.clone().blob();
+      const headers = new Headers(cached.headers);
+      headers.set('X-From-Cache', '1');
+      return new Response(body, {
+        status: cached.status,
+        statusText: cached.statusText,
+        headers
+      });
+    }
+    return new Response(
+      JSON.stringify({ error: 'offline' }),
+      { status: 503, headers: { 'content-type': 'application/json' } }
+    );
+  }
+}
+
+async function cacheFirst(req, cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(req);
+  if (cached) {
+    // Background revalidate
+    fetch(req).then(r => {
+      if (r && r.ok) cache.put(req, r.clone()).catch(() => {});
+    }).catch(() => {});
+    return cached;
+  }
+  try {
+    const fresh = await fetch(req);
+    if (fresh.ok) {
+      cache.put(req, fresh.clone()).catch(() => {});
+      trimCache(cacheName, maxEntries);
+    }
+    return fresh;
+  } catch {
+    return new Response('', { status: 504 });
+  }
+}
+
+async function trimCache(cacheName, max) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length <= max) return;
+  // delete oldest (entries are roughly insertion-ordered)
+  const toDelete = keys.length - max;
+  for (let i = 0; i < toDelete; i++) {
+    await cache.delete(keys[i]);
+  }
+}
