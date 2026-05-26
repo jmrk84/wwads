@@ -5,7 +5,20 @@ Open-source weather PWA. No accounts, no ads, no tracking.
 - **Forecast**: current conditions + next 24 hours + 5-day forecast, from [Open-Meteo](https://open-meteo.com/) (free, no API key).
 - **Rain radar**: animated past ~2 hours + ~30 min nowcast, from [RainViewer](https://www.rainviewer.com/) (free, no API key).
 - **Multi-city**: pin cities to the top strip and switch with one tap. Add your current location with one button.
-- **Installable PWA**: works offline (shows last-fetched data with a "cached" badge), installs to your Android home screen.
+- **Installable PWA**: works offline (shows last-fetched data with a "cached" badge), installs to the home screen on Android and iOS.
+
+## Install
+
+### Android (Chrome)
+
+1. Open <https://jmrk84.github.io/wwads/> in Chrome.
+2. Three-dot menu → **Install app** (or tap the install banner if it appears).
+
+### iOS (Safari)
+
+1. Open <https://jmrk84.github.io/wwads/> in **Safari** — Chrome and Firefox on iOS can't install PWAs.
+2. Tap the **Share** button (square with arrow up).
+3. Scroll down and tap **Add to Home Screen** → **Add**.
 
 ## Stack
 
