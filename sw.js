@@ -1,4 +1,4 @@
-const APP_VERSION = 'v2';
+const APP_VERSION = 'v3';
 const SHELL_CACHE = `wwads-shell-${APP_VERSION}`;
 const DATA_CACHE  = `wwads-data-${APP_VERSION}`;
 const TILE_CACHE  = `wwads-tiles-${APP_VERSION}`;

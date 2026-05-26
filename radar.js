@@ -2,7 +2,8 @@ const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
 // 1x1 transparent PNG — used as fallback when a tile fails to load
 const TRANSPARENT_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=';
 const MIN_ZOOM = 3;
-const MAX_ZOOM = 10;
+// RainViewer 256-size tiles top out at zoom 9; going higher leaves blank tiles.
+const MAX_ZOOM = 9;
 
 let leafletLoading = null;
 function ensureLeaflet() {
@@ -43,7 +44,12 @@ export async function mountRadar(container, city) {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
   }
-  map.setView([city.lat, city.lon], Math.min(Math.max(7, MIN_ZOOM), MAX_ZOOM));
+  // Re-apply zoom limits every mount in case a stale map instance from a prior version is still around
+  map.setMinZoom(MIN_ZOOM);
+  map.setMaxZoom(MAX_ZOOM);
+  const currentZoom = map.getZoom();
+  const targetZoom = Math.min(Math.max(currentZoom || 7, MIN_ZOOM), MAX_ZOOM);
+  map.setView([city.lat, city.lon], targetZoom);
 
   // Reload frames if older than 5 minutes
   if (!frames.length || Date.now() - lastLoadedAt > 5 * 60 * 1000) {
