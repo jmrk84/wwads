@@ -2,10 +2,13 @@ const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
 // 1x1 transparent PNG — used as fallback when a tile fails to load
 const TRANSPARENT_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=';
 const MIN_ZOOM = 3;
-const MAX_ZOOM = 11;
-// RainViewer 256-size tiles top out around zoom 9 — beyond that we ask
-// Leaflet to upscale the native tiles rather than leaving the overlay blank.
-const RAIN_NATIVE_MAX = 9;
+// Matches RainViewer's own reference example
+// (github.com/rainviewer/rainviewer-api-example).
+const MAX_ZOOM = 12;
+// RainViewer radar tiles are only served up to native zoom 7
+// (per https://www.rainviewer.com/api/weather-maps-api.html).
+// Past this, Leaflet upscales the zoom-7 tiles to fill higher zooms.
+const RAIN_NATIVE_MAX = 7;
 
 let leafletLoading = null;
 function ensureLeaflet() {
@@ -38,9 +41,10 @@ export async function mountRadar(container, city) {
       zoomControl: true,
       attributionControl: true,
       minZoom: MIN_ZOOM,
-      maxZoom: MAX_ZOOM,
-      // Hard-stop at zoom limits — no momentary pinch-overshoot before snapping back.
-      bounceAtZoomLimits: false
+      maxZoom: MAX_ZOOM
+      // bounceAtZoomLimits left at default true. Setting it false triggers a
+      // known Leaflet bug (#3530) where touchscreen pinch-to-limit leaves
+      // tiles unloaded after release. Brief bounce is the expected UX.
     });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       minZoom: MIN_ZOOM,
@@ -92,7 +96,7 @@ async function loadRainViewerFrames(L) {
         zIndex: 10,
         minZoom: MIN_ZOOM,
         maxZoom: MAX_ZOOM,
-        // Upscale native zoom-9 tiles instead of disappearing past the radar's coverage.
+        // Upscale native zoom-7 tiles for the higher zooms.
         maxNativeZoom: RAIN_NATIVE_MAX,
         crossOrigin: true,
         errorTileUrl: TRANSPARENT_PX,
