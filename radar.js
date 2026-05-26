@@ -2,8 +2,10 @@ const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
 // 1x1 transparent PNG — used as fallback when a tile fails to load
 const TRANSPARENT_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=';
 const MIN_ZOOM = 3;
-// RainViewer 256-size tiles top out at zoom 9; going higher leaves blank tiles.
-const MAX_ZOOM = 9;
+const MAX_ZOOM = 11;
+// RainViewer 256-size tiles top out around zoom 9 — beyond that we ask
+// Leaflet to upscale the native tiles rather than leaving the overlay blank.
+const RAIN_NATIVE_MAX = 9;
 
 let leafletLoading = null;
 function ensureLeaflet() {
@@ -36,7 +38,9 @@ export async function mountRadar(container, city) {
       zoomControl: true,
       attributionControl: true,
       minZoom: MIN_ZOOM,
-      maxZoom: MAX_ZOOM
+      maxZoom: MAX_ZOOM,
+      // Hard-stop at zoom limits — no momentary pinch-overshoot before snapping back.
+      bounceAtZoomLimits: false
     });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       minZoom: MIN_ZOOM,
@@ -88,6 +92,8 @@ async function loadRainViewerFrames(L) {
         zIndex: 10,
         minZoom: MIN_ZOOM,
         maxZoom: MAX_ZOOM,
+        // Upscale native zoom-9 tiles instead of disappearing past the radar's coverage.
+        maxNativeZoom: RAIN_NATIVE_MAX,
         crossOrigin: true,
         errorTileUrl: TRANSPARENT_PX,
         attribution: '© RainViewer'
