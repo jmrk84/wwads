@@ -1,4 +1,4 @@
-const APP_VERSION = 'v3';
+const APP_VERSION = 'v4';
 const SHELL_CACHE = `wwads-shell-${APP_VERSION}`;
 const DATA_CACHE  = `wwads-data-${APP_VERSION}`;
 const TILE_CACHE  = `wwads-tiles-${APP_VERSION}`;
@@ -40,9 +40,13 @@ const TILE_CACHE_MAX = 400;
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
-    // addAll is atomic; if any fail it fails. Add individually to be resilient.
+    // cache: 'reload' bypasses the browser HTTP cache so each precached asset is
+    // fetched fresh from the network. Without this, GitHub Pages' max-age=600
+    // means a newly-installed SW can cache the previous version's stale files.
     await Promise.all(SHELL_FILES.map(async (file) => {
-      try { await cache.add(file); } catch (err) {
+      try {
+        await cache.add(new Request(file, { cache: 'reload' }));
+      } catch (err) {
         console.warn('[SW] failed to precache', file, err);
       }
     }));
