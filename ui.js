@@ -105,6 +105,27 @@ function dayShort(dateIso) {
   });
 }
 
+export function renderNextHourRain(container, data) {
+  const next = data.hourly?.[0];
+  if (!next || next.precipProb == null) {
+    container.innerHTML = '';
+    return;
+  }
+  const prob = Math.max(0, Math.min(100, Math.round(next.precipProb)));
+  // 5-step gradient: suns at left replaced by drops as probability rises.
+  const drops = Math.round(prob / 20);
+  const suns = 5 - drops;
+  const sunIcon = next.isDay ? '☀️' : '🌙';
+  const icons = sunIcon.repeat(suns) + '💧'.repeat(drops);
+  container.innerHTML = `
+    <div class="next-hour-icons" aria-hidden="true">${icons}</div>
+    <div class="next-hour-meta">
+      <span class="next-hour-title">Next hour</span>
+      <strong>${prob}% rain</strong>
+    </div>
+  `;
+}
+
 export function renderHourly(container, data) {
   if (!data.hourly?.length) {
     container.innerHTML = `<div style="padding:8px;color:var(--text-muted)">No hourly data.</div>`;
@@ -154,8 +175,9 @@ export function renderDaily(container, data) {
   }).join('');
 }
 
-export function showForecastSkeleton(currentEl, hourlyEl, dailyEl) {
+export function showForecastSkeleton(currentEl, nextHourEl, hourlyEl, dailyEl) {
   currentEl.innerHTML = `<div class="skeleton" style="height:140px;"></div>`;
+  if (nextHourEl) nextHourEl.innerHTML = `<div class="skeleton" style="height:42px;margin:8px 0 12px;"></div>`;
   hourlyEl.innerHTML = Array.from({ length: 8 })
     .map(() => `<div class="hour skeleton" style="height:112px;flex:0 0 64px;background-clip:padding-box;"></div>`)
     .join('');

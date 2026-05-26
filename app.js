@@ -1,12 +1,12 @@
 import { store, searchCities, reverseGeocode, getCurrentLocation } from './cities.js';
 import { fetchForecast } from './weather.js';
 import {
-  renderCurrent, renderHourly, renderDaily,
+  renderCurrent, renderNextHourRain, renderHourly, renderDaily,
   showForecastSkeleton, showToast, escapeHtml
 } from './ui.js';
 
 // Bump on each user-visible release. Also bump APP_VERSION in sw.js so caches invalidate.
-const WWADS_VERSION = 'v0.6';
+const WWADS_VERSION = 'v0.7';
 const versionTextEl = document.getElementById('version-text');
 if (versionTextEl) versionTextEl.textContent = `wwads ${WWADS_VERSION}`;
 
@@ -27,6 +27,7 @@ const tabsEl      = document.querySelector('.tabs');
 const forecastEl  = $('#forecast-view');
 const radarEl     = $('#radar-view');
 const currentEl   = $('#current');
+const nextHourEl  = $('#next-hour');
 const hourlyEl    = $('#hourly');
 const dailyEl     = $('#daily');
 
@@ -111,18 +112,20 @@ document.querySelectorAll('.tab').forEach(btn => {
 // ===== Forecast =====
 async function loadForecast(city) {
   lastFetchedCityId = city.id;
-  showForecastSkeleton(currentEl, hourlyEl, dailyEl);
+  showForecastSkeleton(currentEl, nextHourEl, hourlyEl, dailyEl);
   try {
     const data = await fetchForecast({ lat: city.lat, lon: city.lon });
     // If the user has switched away while we fetched, ignore.
     if (store.state.selectedId !== city.id) return;
     lastForecast = data;
     renderCurrent(currentEl, data, city);
+    renderNextHourRain(nextHourEl, data);
     renderHourly(hourlyEl, data);
     renderDaily(dailyEl, data);
   } catch (err) {
     console.error('Forecast failed:', err);
     currentEl.innerHTML = `<div class="error-card">Failed to load forecast: ${escapeHtml(err.message || 'unknown error')}</div>`;
+    nextHourEl.innerHTML = '';
     hourlyEl.innerHTML = '';
     dailyEl.innerHTML = '';
   }
