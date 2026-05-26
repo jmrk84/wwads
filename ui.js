@@ -98,17 +98,29 @@ export function renderCurrent(container, data, city) {
   `;
 }
 
+function dayShort(dateIso) {
+  const [y, m, d] = dateIso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
+    weekday: 'short', day: 'numeric', timeZone: 'UTC'
+  });
+}
+
 export function renderHourly(container, data) {
   if (!data.hourly?.length) {
     container.innerHTML = `<div style="padding:8px;color:var(--text-muted)">No hourly data.</div>`;
     return;
   }
+  let prevDate = null;
   container.innerHTML = data.hourly.map((h, i) => {
     const info = weatherInfo(h.code, h.isDay);
     const label = i === 0 ? 'Now' : escapeHtml(fmtHour(h.time));
     const showPrecip = (h.precipProb ?? 0) >= 10;
+    const date = h.time.slice(0, 10);
+    const dayBadge = (i > 0 && date !== prevDate) ? escapeHtml(dayShort(date)) : '';
+    prevDate = date;
     return `
-      <div class="hour" title="${escapeHtml(info.label)}">
+      <div class="hour ${dayBadge ? 'hour-daybreak' : ''}" title="${escapeHtml(info.label)}">
+        <div class="hour-day">${dayBadge}</div>
         <div class="hour-time">${label}</div>
         <div class="hour-icon" aria-hidden="true">${info.icon}</div>
         <div class="hour-temp">${fmtTemp(h.temp)}</div>
@@ -145,7 +157,7 @@ export function renderDaily(container, data) {
 export function showForecastSkeleton(currentEl, hourlyEl, dailyEl) {
   currentEl.innerHTML = `<div class="skeleton" style="height:140px;"></div>`;
   hourlyEl.innerHTML = Array.from({ length: 8 })
-    .map(() => `<div class="hour skeleton" style="height:96px;flex:0 0 64px;background-clip:padding-box;"></div>`)
+    .map(() => `<div class="hour skeleton" style="height:112px;flex:0 0 64px;background-clip:padding-box;"></div>`)
     .join('');
   dailyEl.innerHTML = Array.from({ length: 5 })
     .map(() => `<div style="height:46px;border-bottom:1px solid var(--border)" class="skeleton"></div>`)

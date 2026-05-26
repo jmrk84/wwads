@@ -245,10 +245,23 @@ main {
   width: 64px;
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 12px 4px;
+  padding: 8px 4px 12px;
   text-align: center;
   font-size: 13px;
   box-shadow: var(--shadow);
+}
+.hour-day {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  min-height: 14px;
+  line-height: 14px;
+}
+.hour-daybreak {
+  border-left: 2px solid var(--accent);
+  padding-left: 2px;
 }
 .hour-time { color: var(--text-muted); font-size: 12px; }
 .hour-icon { font-size: 22px; margin: 4px 0; line-height: 1; }

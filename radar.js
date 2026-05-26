@@ -1,4 +1,8 @@
 const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
+// 1x1 transparent PNG — used as fallback when a tile fails to load
+const TRANSPARENT_PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=';
+const MIN_ZOOM = 3;
+const MAX_ZOOM = 10;
 
 let leafletLoading = null;
 function ensureLeaflet() {
@@ -29,14 +33,17 @@ export async function mountRadar(container, city) {
   if (!map) {
     map = L.map(container, {
       zoomControl: true,
-      attributionControl: true
+      attributionControl: true,
+      minZoom: MIN_ZOOM,
+      maxZoom: MAX_ZOOM
     });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
+      minZoom: MIN_ZOOM,
+      maxZoom: MAX_ZOOM,
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
   }
-  map.setView([city.lat, city.lon], 7);
+  map.setView([city.lat, city.lon], Math.min(Math.max(7, MIN_ZOOM), MAX_ZOOM));
 
   // Reload frames if older than 5 minutes
   if (!frames.length || Date.now() - lastLoadedAt > 5 * 60 * 1000) {
@@ -69,8 +76,29 @@ async function loadRainViewerFrames(L) {
   for (const f of frames) {
     const layer = L.tileLayer(
       `${host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`,
-      { opacity: 0, tileSize: 256, zIndex: 10, attribution: '© RainViewer' }
+      {
+        opacity: 0,
+        tileSize: 256,
+        zIndex: 10,
+        minZoom: MIN_ZOOM,
+        maxZoom: MAX_ZOOM,
+        crossOrigin: true,
+        errorTileUrl: TRANSPARENT_PX,
+        attribution: '© RainViewer'
+      }
     );
+    layer.on('tileerror', (e) => {
+      const tile = e.tile;
+      if (!tile || !e.coords) return;
+      tile._retries = (tile._retries || 0) + 1;
+      if (tile._retries > 2) return;
+      setTimeout(() => {
+        if (!tile.parentNode) return;
+        const base = layer.getTileUrl(e.coords);
+        const sep = base.includes('?') ? '&' : '?';
+        try { tile.src = `${base}${sep}_r=${tile._retries}`; } catch {}
+      }, 800 * tile._retries);
+    });
     layer.addTo(map);
     rainLayers.push(layer);
   }

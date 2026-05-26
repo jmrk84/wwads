@@ -43,9 +43,13 @@ export async function fetchForecast({ lat, lon }) {
   const data = await res.json();
 
   // Hourly: find current hour (matching data.current.time which is also wall-clock local) and take 24 hours.
+  // Open-Meteo hourly times are hour-aligned ("YYYY-MM-DDTHH:00"); current.time may include minutes.
+  // Match on the hour prefix, falling back to first time >= now.
   const allHours = data.hourly?.time || [];
-  const nowIso = data.current?.time;
-  let startIdx = allHours.indexOf(nowIso);
+  const nowIso = data.current?.time || '';
+  const nowHourPrefix = nowIso.slice(0, 13); // "YYYY-MM-DDTHH"
+  let startIdx = nowHourPrefix ? allHours.findIndex(t => t.startsWith(nowHourPrefix)) : -1;
+  if (startIdx < 0 && nowIso) startIdx = allHours.findIndex(t => t >= nowIso);
   if (startIdx < 0) startIdx = 0;
 
   const hourly = [];
