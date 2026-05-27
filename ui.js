@@ -111,22 +111,24 @@ export function renderCurrent(container, data, city) {
   const staleBadge = data.stale
     ? `<span class="stale-badge" title="Showing last-fetched data (offline)">cached</span>`
     : '';
+  const dewVal = c.dew_point_2m;
+  const comfort = dewComfort(dewVal);
   container.innerHTML = `
     <div class="current-top">
       <div class="current-icon">${emojiImg(info.icon)}</div>
       <div>
         <div class="current-temp">${fmtTempFull(c.temperature_2m)} ${staleBadge}</div>
-        <div class="current-label">${escapeHtml(info.label)} · feels ${fmtTempFull(c.apparent_temperature)}</div>
+        <div class="current-label">${escapeHtml(info.label)} · feels ${fmtTempFull(c.apparent_temperature)}${comfort ? ` · ${escapeHtml(comfort)}` : ''}</div>
         <div class="current-label current-place">${escapeHtml(placeLine(city))}</div>
       </div>
     </div>
     <div class="current-meta">
       <div>Humidity<strong>${c.relative_humidity_2m ?? '—'}%</strong></div>
-      <div>Wind<strong>${Math.round(c.wind_speed_10m ?? 0)} km/h</strong></div>
       <div>Precip<strong>${(c.precipitation ?? 0).toFixed(1)} mm</strong></div>
+      <div>Wind<strong>${Math.round(c.wind_speed_10m ?? 0)} km/h</strong></div>
       <div>Pressure<strong>${Math.round(c.pressure_msl ?? 0)} hPa</strong></div>
-      <div>Dew point<strong>${c.dew_point_2m != null ? Math.round(c.dew_point_2m) + '°C' : '—'}</strong>${dewComfort(c.dew_point_2m) ? `<span class="meta-sub">${dewComfort(c.dew_point_2m)}</span>` : ''}</div>
     </div>
+    ${dewVal != null ? `<div class="current-dew">Dew point<strong>${Math.round(dewVal)}°C</strong></div>` : ''}
   `;
 }
 

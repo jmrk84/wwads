@@ -207,24 +207,34 @@ main {
 }
 .current-meta {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  margin-top: 16px;
-  font-size: 12px;
+  margin-top: 14px;
+  font-size: 11px;
   color: var(--text-muted);
+  text-align: center;
 }
 .current-meta > div strong {
   display: block;
   color: var(--text);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   margin-top: 2px;
 }
-.current-meta .meta-sub {
-  display: block;
+.current-dew {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  text-align: center;
   font-size: 11px;
   color: var(--text-muted);
-  margin-top: 1px;
+}
+.current-dew strong {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 /* ===== Twemoji icons ===== */
