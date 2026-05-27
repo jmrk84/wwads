@@ -65,6 +65,19 @@ export function escapeHtml(s) {
 export function fmtTemp(t) { return t == null ? '—' : `${Math.round(t)}°`; }
 export function fmtTempFull(t) { return t == null ? '—' : `${Math.round(t)}°C`; }
 
+// Dew-point comfort scale (°C). Brackets match the standard meteorological
+// summary used by NWS / Wikipedia: humidity perception correlates more with
+// dew point than relative humidity.
+export function dewComfort(t) {
+  if (t == null || Number.isNaN(t)) return null;
+  if (t < 10) return 'Dry';
+  if (t < 13) return 'Comfortable';
+  if (t < 16) return 'Pleasant';
+  if (t < 20) return 'Humid';
+  if (t < 24) return 'Muggy';
+  return 'Oppressive';
+}
+
 // Open-Meteo with timezone=auto returns wall-clock local time strings (no TZ suffix).
 // We must format them as strings, not Date objects, to avoid timezone skew when viewing other cities.
 export function fmtHour(iso) {
@@ -112,6 +125,7 @@ export function renderCurrent(container, data, city) {
       <div>Wind<strong>${Math.round(c.wind_speed_10m ?? 0)} km/h</strong></div>
       <div>Precip<strong>${(c.precipitation ?? 0).toFixed(1)} mm</strong></div>
       <div>Pressure<strong>${Math.round(c.pressure_msl ?? 0)} hPa</strong></div>
+      <div>Dew point<strong>${c.dew_point_2m != null ? Math.round(c.dew_point_2m) + '°C' : '—'}</strong>${dewComfort(c.dew_point_2m) ? `<span class="meta-sub">${dewComfort(c.dew_point_2m)}</span>` : ''}</div>
     </div>
   `;
 }

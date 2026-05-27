@@ -220,6 +220,12 @@ main {
   font-weight: 500;
   margin-top: 2px;
 }
+.current-meta .meta-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
 
 /* ===== Twemoji icons ===== */
 .emoji {

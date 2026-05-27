@@ -13,7 +13,8 @@ export async function fetchForecast({ lat, lon }) {
     'weather_code',
     'wind_speed_10m',
     'wind_direction_10m',
-    'pressure_msl'
+    'pressure_msl',
+    'dew_point_2m'
   ].join(','));
   url.searchParams.set('hourly', [
     'temperature_2m',
