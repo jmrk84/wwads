@@ -124,11 +124,11 @@ export function renderCurrent(container, data, city) {
     </div>
     <div class="current-meta">
       <div>Humidity<strong>${c.relative_humidity_2m ?? '—'}%</strong></div>
+      <div>Dew point<strong>${dewVal != null ? Math.round(dewVal) + '°C' : '—'}</strong></div>
       <div>Precip<strong>${(c.precipitation ?? 0).toFixed(1)} mm</strong></div>
       <div>Wind<strong>${Math.round(c.wind_speed_10m ?? 0)} km/h</strong></div>
       <div>Pressure<strong>${Math.round(c.pressure_msl ?? 0)} hPa</strong></div>
     </div>
-    ${dewVal != null ? `<div class="current-dew">Dew point<strong>${Math.round(dewVal)}°C</strong></div>` : ''}
   `;
 }
 
