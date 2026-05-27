@@ -38,6 +38,24 @@ export function weatherInfo(code, isDay = true) {
   return { icon, label };
 }
 
+// Convert an emoji string to its Twemoji filename
+// (lowercase hex codepoints joined by '-', U+FE0F variation selector stripped).
+function emojiCodepoint(emoji) {
+  const cps = [];
+  for (const ch of emoji) {
+    const cp = ch.codePointAt(0);
+    if (cp === 0xFE0F) continue;
+    cps.push(cp.toString(16));
+  }
+  return cps.join('-');
+}
+
+// Render a single emoji as a vendored Twemoji <img>. Decorative by default
+// (alt="" + aria-hidden) — surrounding text labels provide the semantics.
+export function emojiImg(char) {
+  return `<img class="emoji" src="vendor/twemoji/${emojiCodepoint(char)}.svg" alt="" aria-hidden="true" draggable="false">`;
+}
+
 export function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -82,7 +100,7 @@ export function renderCurrent(container, data, city) {
     : '';
   container.innerHTML = `
     <div class="current-top">
-      <div class="current-icon" aria-hidden="true">${info.icon}</div>
+      <div class="current-icon">${emojiImg(info.icon)}</div>
       <div>
         <div class="current-temp">${fmtTempFull(c.temperature_2m)} ${staleBadge}</div>
         <div class="current-label">${escapeHtml(info.label)} · feels ${fmtTempFull(c.apparent_temperature)}</div>
@@ -115,10 +133,11 @@ export function renderNextHourRain(container, data) {
   // 5-step gradient: suns at left replaced by drops as probability rises.
   const drops = Math.round(prob / 20);
   const suns = 5 - drops;
-  const sunIcon = next.isDay ? '☀️' : '🌙';
-  const icons = sunIcon.repeat(suns) + '💧'.repeat(drops);
+  const sunImg = emojiImg(next.isDay ? '☀️' : '🌙');
+  const dropImg = emojiImg('💧');
+  const icons = sunImg.repeat(suns) + dropImg.repeat(drops);
   container.innerHTML = `
-    <div class="next-hour-icons" aria-hidden="true">${icons}</div>
+    <div class="next-hour-icons">${icons}</div>
     <div class="next-hour-meta">
       <span class="next-hour-title">Next hour</span>
       <strong>${prob}% rain</strong>
@@ -143,9 +162,9 @@ export function renderHourly(container, data) {
       <div class="hour ${dayBadge ? 'hour-daybreak' : ''}" title="${escapeHtml(info.label)}">
         <div class="hour-day">${dayBadge}</div>
         <div class="hour-time">${label}</div>
-        <div class="hour-icon" aria-hidden="true">${info.icon}</div>
+        <div class="hour-icon">${emojiImg(info.icon)}</div>
         <div class="hour-temp">${fmtTemp(h.temp)}</div>
-        <div class="hour-precip">${showPrecip ? `💧${h.precipProb}%` : ''}</div>
+        <div class="hour-precip">${showPrecip ? `${emojiImg('💧')}${h.precipProb}%` : ''}</div>
       </div>
     `;
   }).join('');
@@ -159,13 +178,13 @@ export function renderDaily(container, data) {
   }
   container.innerHTML = days.map((d, i) => {
     const info = weatherInfo(d.code, true);
-    const probTxt = (d.precipProb ?? 0) >= 10 ? `💧${d.precipProb}%` : '';
+    const probTxt = (d.precipProb ?? 0) >= 10 ? `${emojiImg('💧')}${d.precipProb}%` : '';
     const mmTxt = (d.precipMm ?? 0) > 0 ? `${d.precipMm.toFixed(1)} mm` : '';
     const precipLine = [probTxt, mmTxt].filter(Boolean).join(' · ');
     return `
       <div class="day">
         <div class="day-name">${escapeHtml(fmtDay(d.date, i))}</div>
-        <div class="day-icon" title="${escapeHtml(info.label)}" aria-hidden="true">${info.icon}</div>
+        <div class="day-icon" title="${escapeHtml(info.label)}">${emojiImg(info.icon)}</div>
         <div class="day-precip">${precipLine}</div>
         <div class="day-temps">
           <span class="hi">${fmtTemp(d.tmax)}</span><span class="lo">${fmtTemp(d.tmin)}</span>

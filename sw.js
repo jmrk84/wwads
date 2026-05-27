@@ -1,4 +1,4 @@
-const APP_VERSION = 'v8';
+const APP_VERSION = 'v9';
 const SHELL_CACHE = `wwads-shell-${APP_VERSION}`;
 const DATA_CACHE  = `wwads-data-${APP_VERSION}`;
 const TILE_CACHE  = `wwads-tiles-${APP_VERSION}`;
@@ -22,7 +22,20 @@ const SHELL_FILES = [
   'vendor/leaflet/images/layers-2x.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
-  'icons/icon-maskable-512.png'
+  'icons/icon-maskable-512.png',
+  'vendor/twemoji/2600.svg',
+  'vendor/twemoji/1f319.svg',
+  'vendor/twemoji/1f324.svg',
+  'vendor/twemoji/26c5.svg',
+  'vendor/twemoji/2601.svg',
+  'vendor/twemoji/1f32b.svg',
+  'vendor/twemoji/1f326.svg',
+  'vendor/twemoji/1f327.svg',
+  'vendor/twemoji/26c8.svg',
+  'vendor/twemoji/1f328.svg',
+  'vendor/twemoji/2744.svg',
+  'vendor/twemoji/1f4a7.svg',
+  'vendor/twemoji/2753.svg'
 ];
 
 const DATA_HOSTS = [

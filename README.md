@@ -45,6 +45,7 @@ GitHub Pages, served from the `main` branch root at `https://jmrk84.github.io/ww
 - Map © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)
 - Reverse geocoding by [BigDataCloud](https://www.bigdatacloud.com/)
 - Map library: [Leaflet](https://leafletjs.com/) (BSD-2-Clause, see `vendor/leaflet/LICENSE`)
+- Weather icons: [Twemoji](https://github.com/jdecked/twemoji) by Twitter Inc / jdecked, graphics licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (see `vendor/twemoji/LICENSE`)
 
 ## License
 

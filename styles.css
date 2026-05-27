@@ -221,6 +221,20 @@ main {
   margin-top: 2px;
 }
 
+/* ===== Twemoji icons ===== */
+.emoji {
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  vertical-align: -0.125em;
+  margin: 0 0.05em;
+}
+/* In contexts where the emoji is the only content of its cell, drop the margin. */
+.current-icon .emoji,
+.hour-icon .emoji,
+.day-icon .emoji,
+.next-hour-icons .emoji { margin: 0; }
+
 /* ===== Next-hour rain stripe ===== */
 .next-hour {
   display: flex;
@@ -233,9 +247,14 @@ main {
   border-radius: var(--radius);
 }
 .next-hour-icons {
-  font-size: 16px;
-  letter-spacing: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   line-height: 1;
+}
+.next-hour-icons .emoji {
+  width: 20px;
+  height: 20px;
 }
 .next-hour-meta {
   text-align: right;
