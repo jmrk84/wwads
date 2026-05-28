@@ -69,18 +69,23 @@ export async function fetchForecast({ lat, lon }) {
     });
   }
 
-  // Daily dew point: Open-Meteo doesn't aggregate it daily, so compute the mean
-  // from the full hourly array. Walk all hours, sum + count per date.
+  // Daily dew point: Open-Meteo doesn't aggregate it daily, so compute day-mean
+  // and night-mean from the full hourly array using the is_day flag.
   const dewByDate = {};
   const dewArr = data.hourly?.dew_point_2m || [];
+  const isDayArr = data.hourly?.is_day || [];
   for (let i = 0; i < allHours.length; i++) {
     const date = allHours[i].slice(0, 10);
     const v = dewArr[i];
     if (v == null) continue;
-    if (!dewByDate[date]) dewByDate[date] = { sum: 0, count: 0 };
-    dewByDate[date].sum += v;
-    dewByDate[date].count++;
+    if (!dewByDate[date]) {
+      dewByDate[date] = { day: { sum: 0, count: 0 }, night: { sum: 0, count: 0 } };
+    }
+    const bucket = isDayArr[i] === 1 ? dewByDate[date].day : dewByDate[date].night;
+    bucket.sum += v;
+    bucket.count++;
   }
+  const meanOf = b => (b && b.count > 0 ? b.sum / b.count : null);
 
   const dailyTimes = data.daily?.time || [];
   const daily = dailyTimes.slice(0, 6).map((date, i) => ({
@@ -90,9 +95,8 @@ export async function fetchForecast({ lat, lon }) {
     tmax: data.daily.temperature_2m_max?.[i],
     precipMm: data.daily.precipitation_sum?.[i],
     precipProb: data.daily.precipitation_probability_max?.[i],
-    dewMean: dewByDate[date] && dewByDate[date].count > 0
-      ? dewByDate[date].sum / dewByDate[date].count
-      : null
+    dewDayMean: meanOf(dewByDate[date]?.day),
+    dewNightMean: meanOf(dewByDate[date]?.night)
   }));
 
   return {

@@ -214,9 +214,17 @@ main {
   align-items: center;
   gap: 16px;
 }
+.current-text { flex: 1; min-width: 0; }
+.current-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 .current-icon { font-size: 56px; line-height: 1; }
-.current-temp { font-size: 44px; font-weight: 300; line-height: 1; }
+.current-temp { font-size: 44px; font-weight: 300; line-height: 1; flex: 1; min-width: 0; }
 .current-label { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+.current-unit-toggle { flex: 0 0 auto; }
 .current-place { font-weight: 500; color: var(--text); }
 .stale-badge {
   display: inline-block;
@@ -383,10 +391,26 @@ main {
 .day-icon { font-size: 22px; text-align: center; line-height: 1; }
 .day-precip { font-size: 12px; color: var(--precip); }
 .day-dew {
+  margin-top: 3px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.day-dew-label {
   font-size: 10px;
   color: var(--text-muted);
-  margin-top: 2px;
-  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.day-dew-day {
+  font-weight: 500;
+  color: var(--text);
+}
+.day-dew-night {
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 6px;
 }
 .day-temps {
   text-align: right;

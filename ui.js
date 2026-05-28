@@ -67,8 +67,8 @@ export function escapeHtml(s) {
 let _unit = 'c';
 export function setUnit(u) { _unit = (u === 'f' ? 'f' : 'c'); }
 export function getUnit() { return _unit; }
-function toDisplay(c) { return _unit === 'f' ? c * 9 / 5 + 32 : c; }
-function unitSuffix() { return _unit === 'f' ? '°F' : '°C'; }
+export function toDisplay(c) { return _unit === 'f' ? c * 9 / 5 + 32 : c; }
+export function unitSuffix() { return _unit === 'f' ? '°F' : '°C'; }
 
 export function fmtTemp(t) { return t == null ? '—' : `${Math.round(toDisplay(t))}°`; }
 export function fmtTempFull(t) { return t == null ? '—' : `${Math.round(toDisplay(t))}${unitSuffix()}`; }
@@ -121,18 +121,28 @@ export function renderCurrent(container, data, city) {
     : '';
   const dewVal = c.dew_point_2m;
   const comfort = dewComfort(dewVal);
+  const u = getUnit();
+  const dewDisplay = dewVal != null ? `${Math.round(toDisplay(dewVal))}${unitSuffix()}` : '—';
+  const toggleHtml = `
+    <div class="unit-toggle current-unit-toggle" role="group" aria-label="Temperature unit">
+      <button type="button" class="unit-opt ${u === 'c' ? 'active' : ''}" data-unit="c" aria-pressed="${u === 'c'}" title="Celsius">°C</button>
+      <button type="button" class="unit-opt ${u === 'f' ? 'active' : ''}" data-unit="f" aria-pressed="${u === 'f'}" title="Fahrenheit">°F</button>
+    </div>`;
   container.innerHTML = `
     <div class="current-top">
       <div class="current-icon">${emojiImg(info.icon)}</div>
-      <div>
-        <div class="current-temp">${fmtTempFull(c.temperature_2m)} ${staleBadge}</div>
+      <div class="current-text">
+        <div class="current-header-row">
+          <div class="current-temp">${fmtTempFull(c.temperature_2m)} ${staleBadge}</div>
+          ${toggleHtml}
+        </div>
         <div class="current-label">${escapeHtml(info.label)} · feels ${fmtTempFull(c.apparent_temperature)}${comfort ? ` · ${escapeHtml(comfort)}` : ''}</div>
         <div class="current-label current-place">${escapeHtml(placeLine(city))}</div>
       </div>
     </div>
     <div class="current-meta">
       <div>Humidity<strong>${c.relative_humidity_2m ?? '—'}%</strong></div>
-      <div>Dew point<strong>${dewVal != null ? Math.round(dewVal) + '°C' : '—'}</strong></div>
+      <div>Dew point<strong>${dewDisplay}</strong></div>
       <div>Precip<strong>${(c.precipitation ?? 0).toFixed(1)} mm</strong></div>
       <div>Wind<strong>${Math.round(c.wind_speed_10m ?? 0)} km/h</strong></div>
       <div>Pressure<strong>${Math.round(c.pressure_msl ?? 0)} hPa</strong></div>
@@ -207,7 +217,13 @@ export function renderDaily(container, data) {
     const probTxt = (d.precipProb ?? 0) >= 10 ? `${emojiImg('💧')}${d.precipProb}%` : '';
     const mmTxt = (d.precipMm ?? 0) > 0 ? `${d.precipMm.toFixed(1)} mm` : '';
     const precipLine = [probTxt, mmTxt].filter(Boolean).join(' · ');
-    const dewLine = d.dewMean != null ? `<div class="day-dew">dew ${fmtTemp(d.dewMean)} avg</div>` : '';
+    const dewLine = (d.dewDayMean != null || d.dewNightMean != null)
+      ? `<div class="day-dew">
+           <span class="day-dew-label">dew</span>
+           <span class="day-dew-day">${d.dewDayMean != null ? fmtTemp(d.dewDayMean) : '—'}</span>
+           <span class="day-dew-night">${d.dewNightMean != null ? fmtTemp(d.dewNightMean) : '—'}</span>
+         </div>`
+      : '';
     return `
       <div class="day">
         <div class="day-name">${escapeHtml(fmtDay(d.date, i))}</div>

@@ -7,7 +7,7 @@ import {
 } from './ui.js';
 
 // Bump on each user-visible release. Also bump APP_VERSION in sw.js so caches invalidate.
-const WWADS_VERSION = 'v0.11';
+const WWADS_VERSION = 'v13';
 const versionTextEl = document.getElementById('version-text');
 if (versionTextEl) versionTextEl.textContent = `wwads ${WWADS_VERSION}`;
 
@@ -255,15 +255,9 @@ $('#btn-add-current').addEventListener('click', addCurrentLocation);
 $('#empty-add-current').addEventListener('click', addCurrentLocation);
 
 // ===== Unit toggle =====
-function syncUnitToggleUI() {
-  const u = store.state.unit;
-  document.querySelectorAll('.unit-opt').forEach(b => {
-    const isActive = b.dataset.unit === u;
-    b.classList.toggle('active', isActive);
-    b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-  });
-}
-
+// The toggle is now rendered inside the current-weather card (which re-renders
+// on each forecast load and unit change), so we use document-level event
+// delegation rather than binding to specific button elements.
 function rerenderForecast() {
   const city = store.getSelected();
   if (city && lastForecast && currentTab === 'forecast') {
@@ -274,17 +268,15 @@ function rerenderForecast() {
   }
 }
 
-document.querySelectorAll('.unit-opt').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const u = btn.dataset.unit;
-    setUiUnit(u);
-    store.setUnit(u);
-    syncUnitToggleUI();
-    rerenderForecast();
-  });
+document.body.addEventListener('click', (e) => {
+  const btn = e.target.closest('.unit-opt');
+  if (!btn) return;
+  const u = btn.dataset.unit;
+  if ((u !== 'c' && u !== 'f') || store.state.unit === u) return;
+  setUiUnit(u);
+  store.setUnit(u);
+  rerenderForecast();
 });
-
-syncUnitToggleUI();
 
 // ===== Store subscription =====
 store.subscribe((state) => {
