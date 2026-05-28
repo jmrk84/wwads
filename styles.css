@@ -94,7 +94,31 @@ h1, h2 { margin: 0; }
 .chip-remove:hover { background: rgba(0, 0, 0, 0.20); }
 .chip.active .chip-remove:hover { background: rgba(255, 255, 255, 0.45); }
 
-.bar-actions { display: flex; gap: 4px; }
+.bar-actions { display: flex; gap: 6px; align-items: center; }
+
+.unit-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+  background: var(--surface);
+}
+.unit-opt {
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 999px;
+  min-width: 30px;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.unit-opt.active {
+  background: var(--accent);
+  color: white;
+}
 
 .icon-btn {
   display: inline-flex;
@@ -324,6 +348,14 @@ main {
 .hour-time { color: var(--text-muted); font-size: 12px; }
 .hour-icon { font-size: 22px; margin: 4px 0; line-height: 1; }
 .hour-temp { font-weight: 500; }
+.hour-dew {
+  color: var(--text-muted);
+  font-size: 9px;
+  line-height: 1.2;
+  min-height: 11px;
+  margin-top: 1px;
+  letter-spacing: 0.2px;
+}
 .hour-precip {
   color: var(--precip);
   font-size: 11px;
@@ -350,6 +382,12 @@ main {
 .day-name { font-weight: 500; }
 .day-icon { font-size: 22px; text-align: center; line-height: 1; }
 .day-precip { font-size: 12px; color: var(--precip); }
+.day-dew {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  letter-spacing: 0.2px;
+}
 .day-temps {
   text-align: right;
   font-variant-numeric: tabular-nums;

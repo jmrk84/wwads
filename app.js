@@ -2,13 +2,17 @@ import { store, searchCities, reverseGeocode, getCurrentLocation } from './citie
 import { fetchForecast } from './weather.js';
 import {
   renderCurrent, renderNextHourRain, renderHourly, renderDaily,
-  showForecastSkeleton, showToast, escapeHtml
+  showForecastSkeleton, showToast, escapeHtml,
+  setUnit as setUiUnit
 } from './ui.js';
 
 // Bump on each user-visible release. Also bump APP_VERSION in sw.js so caches invalidate.
-const WWADS_VERSION = 'v0.10';
+const WWADS_VERSION = 'v0.11';
 const versionTextEl = document.getElementById('version-text');
 if (versionTextEl) versionTextEl.textContent = `wwads ${WWADS_VERSION}`;
+
+// Apply persisted unit before any forecast render.
+setUiUnit(store.state.unit);
 
 // ===== Service worker =====
 if ('serviceWorker' in navigator) {
@@ -249,6 +253,38 @@ async function addCurrentLocation() {
 
 $('#btn-add-current').addEventListener('click', addCurrentLocation);
 $('#empty-add-current').addEventListener('click', addCurrentLocation);
+
+// ===== Unit toggle =====
+function syncUnitToggleUI() {
+  const u = store.state.unit;
+  document.querySelectorAll('.unit-opt').forEach(b => {
+    const isActive = b.dataset.unit === u;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function rerenderForecast() {
+  const city = store.getSelected();
+  if (city && lastForecast && currentTab === 'forecast') {
+    renderCurrent(currentEl, lastForecast, city);
+    renderNextHourRain(nextHourEl, lastForecast);
+    renderHourly(hourlyEl, lastForecast);
+    renderDaily(dailyEl, lastForecast);
+  }
+}
+
+document.querySelectorAll('.unit-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const u = btn.dataset.unit;
+    setUiUnit(u);
+    store.setUnit(u);
+    syncUnitToggleUI();
+    rerenderForecast();
+  });
+});
+
+syncUnitToggleUI();
 
 // ===== Store subscription =====
 store.subscribe((state) => {

@@ -62,8 +62,16 @@ export function escapeHtml(s) {
   ));
 }
 
-export function fmtTemp(t) { return t == null ? '—' : `${Math.round(t)}°`; }
-export function fmtTempFull(t) { return t == null ? '—' : `${Math.round(t)}°C`; }
+// Display unit ('c' or 'f'). Module-level so all formatters share it without
+// every render function needing to thread it through.
+let _unit = 'c';
+export function setUnit(u) { _unit = (u === 'f' ? 'f' : 'c'); }
+export function getUnit() { return _unit; }
+function toDisplay(c) { return _unit === 'f' ? c * 9 / 5 + 32 : c; }
+function unitSuffix() { return _unit === 'f' ? '°F' : '°C'; }
+
+export function fmtTemp(t) { return t == null ? '—' : `${Math.round(toDisplay(t))}°`; }
+export function fmtTempFull(t) { return t == null ? '—' : `${Math.round(toDisplay(t))}${unitSuffix()}`; }
 
 // Dew-point comfort scale (°C). Brackets match the standard meteorological
 // summary used by NWS / Wikipedia: humidity perception correlates more with
@@ -174,12 +182,14 @@ export function renderHourly(container, data) {
     const date = h.time.slice(0, 10);
     const dayBadge = (i > 0 && date !== prevDate) ? escapeHtml(dayShort(date)) : '';
     prevDate = date;
+    const dewTxt = h.dewPoint != null ? `dew ${fmtTemp(h.dewPoint)}` : '';
     return `
       <div class="hour ${dayBadge ? 'hour-daybreak' : ''}" title="${escapeHtml(info.label)}">
         <div class="hour-day">${dayBadge}</div>
         <div class="hour-time">${label}</div>
         <div class="hour-icon">${emojiImg(info.icon)}</div>
         <div class="hour-temp">${fmtTemp(h.temp)}</div>
+        <div class="hour-dew">${dewTxt}</div>
         <div class="hour-precip">${showPrecip ? `${emojiImg('💧')}${h.precipProb}%` : ''}</div>
       </div>
     `;
@@ -197,11 +207,12 @@ export function renderDaily(container, data) {
     const probTxt = (d.precipProb ?? 0) >= 10 ? `${emojiImg('💧')}${d.precipProb}%` : '';
     const mmTxt = (d.precipMm ?? 0) > 0 ? `${d.precipMm.toFixed(1)} mm` : '';
     const precipLine = [probTxt, mmTxt].filter(Boolean).join(' · ');
+    const dewLine = d.dewMean != null ? `<div class="day-dew">dew ${fmtTemp(d.dewMean)} avg</div>` : '';
     return `
       <div class="day">
         <div class="day-name">${escapeHtml(fmtDay(d.date, i))}</div>
         <div class="day-icon" title="${escapeHtml(info.label)}">${emojiImg(info.icon)}</div>
-        <div class="day-precip">${precipLine}</div>
+        <div class="day-precip">${precipLine}${dewLine}</div>
         <div class="day-temps">
           <span class="hi">${fmtTemp(d.tmax)}</span><span class="lo">${fmtTemp(d.tmin)}</span>
         </div>

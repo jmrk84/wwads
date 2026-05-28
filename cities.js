@@ -9,14 +9,15 @@ function uid() {
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { cities: [], selectedId: null };
+    if (!raw) return { cities: [], selectedId: null, unit: 'c' };
     const data = JSON.parse(raw);
     return {
       cities: Array.isArray(data.cities) ? data.cities : [],
-      selectedId: data.selectedId || null
+      selectedId: data.selectedId || null,
+      unit: data.unit === 'f' ? 'f' : 'c'
     };
   } catch {
-    return { cities: [], selectedId: null };
+    return { cities: [], selectedId: null, unit: 'c' };
   }
 }
 
@@ -63,6 +64,14 @@ export const store = {
     if (this.state.selectedId === id) return;
     if (!this.state.cities.some(c => c.id === id)) return;
     this.state.selectedId = id;
+    save(this.state);
+    this.emit();
+  },
+
+  setUnit(u) {
+    const next = u === 'f' ? 'f' : 'c';
+    if (this.state.unit === next) return;
+    this.state.unit = next;
     save(this.state);
     this.emit();
   },
