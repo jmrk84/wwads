@@ -7,7 +7,7 @@ import {
 } from './ui.js';
 
 // Bump on each user-visible release. Also bump APP_VERSION in sw.js so caches invalidate.
-const WWADS_VERSION = 'v13';
+const WWADS_VERSION = 'v14';
 const versionTextEl = document.getElementById('version-text');
 if (versionTextEl) versionTextEl.textContent = `wwads ${WWADS_VERSION}`;
 
@@ -38,7 +38,13 @@ const dailyEl     = $('#daily');
 let currentTab = 'forecast';
 let lastFetchedCityId = null;
 let lastForecast = null;
+let lastFetchAtMs = 0;
 let radarMounted = false;
+
+// If the forecast hasn't been refreshed for this long, fetch again when the
+// app becomes visible or comes back online. Stops the "stale forecast on
+// resume" issue where Android keeps the PWA suspended in memory.
+const STALE_THRESHOLD_MS = 5 * 60 * 1000;
 
 // ===== Chip strip =====
 function renderChips(state) {
@@ -114,20 +120,22 @@ document.querySelectorAll('.tab').forEach(btn => {
 });
 
 // ===== Forecast =====
-async function loadForecast(city) {
+async function loadForecast(city, { background = false } = {}) {
   lastFetchedCityId = city.id;
-  showForecastSkeleton(currentEl, nextHourEl, hourlyEl, dailyEl);
+  if (!background) showForecastSkeleton(currentEl, nextHourEl, hourlyEl, dailyEl);
   try {
     const data = await fetchForecast({ lat: city.lat, lon: city.lon });
     // If the user has switched away while we fetched, ignore.
     if (store.state.selectedId !== city.id) return;
     lastForecast = data;
+    lastFetchAtMs = Date.now();
     renderCurrent(currentEl, data, city);
     renderNextHourRain(nextHourEl, data);
     renderHourly(hourlyEl, data);
     renderDaily(dailyEl, data);
   } catch (err) {
     console.error('Forecast failed:', err);
+    if (background) return; // keep the previous render rather than wiping it
     currentEl.innerHTML = `<div class="error-card">Failed to load forecast: ${escapeHtml(err.message || 'unknown error')}</div>`;
     nextHourEl.innerHTML = '';
     hourlyEl.innerHTML = '';
@@ -288,6 +296,23 @@ store.subscribe((state) => {
     radarApi.recenterRadar(sel);
   }
 });
+
+// ===== Auto-refresh on resume / reconnect =====
+// On Android, the installed PWA often resumes from a suspended JS context
+// rather than cold-starting — so nothing kicks off a new fetch on its own.
+// Fire one when the app becomes visible or comes back online, but only if
+// the last fetch is older than STALE_THRESHOLD_MS to avoid hammering the API.
+function maybeRefreshForecast() {
+  const city = store.getSelected();
+  if (!city) return;
+  if (Date.now() - lastFetchAtMs < STALE_THRESHOLD_MS) return;
+  loadForecast(city, { background: true });
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') maybeRefreshForecast();
+});
+window.addEventListener('online', maybeRefreshForecast);
 
 // ===== Initial render =====
 renderChips(store.state);
