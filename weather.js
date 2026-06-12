@@ -1,5 +1,13 @@
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 
+// Open-Meteo hourly times are local wall-clock with no offset ("YYYY-MM-DDTHH:mm").
+// Parse as UTC so the trend charts' midnight gridlines land on round boundaries
+// and day labels are formatted consistently regardless of the viewer's timezone.
+function toUtcSec(iso) {
+  const norm = (iso.length === 16 ? iso + ':00' : iso) + 'Z';
+  return Math.floor(Date.parse(norm) / 1000);
+}
+
 export async function fetchForecast({ lat, lon }) {
   const url = new URL(FORECAST_URL);
   url.searchParams.set('latitude', String(lat));
@@ -99,12 +107,24 @@ export async function fetchForecast({ lat, lon }) {
     dewNightMean: meanOf(dewByDate[date]?.night)
   }));
 
+  // 5-day hourly series for the trend charts (temperature °C, precip
+  // probability %, precip amount mm). x is UTC-parsed seconds.
+  const chartN = Math.min(allHours.length, 120);
+  const chart = { t: [], temp: [], pop: [], mm: [] };
+  for (let i = 0; i < chartN; i++) {
+    chart.t.push(toUtcSec(allHours[i]));
+    chart.temp.push(data.hourly.temperature_2m?.[i] ?? null);
+    chart.pop.push(data.hourly.precipitation_probability?.[i] ?? 0);
+    chart.mm.push(data.hourly.precipitation?.[i] ?? 0);
+  }
+
   return {
     fetchedAt: Date.now(),
     timezone: data.timezone,
     stale,
     current: data.current,
     hourly,
-    daily
+    daily,
+    chart
   };
 }

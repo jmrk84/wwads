@@ -5,9 +5,10 @@ import {
   showForecastSkeleton, showToast, escapeHtml,
   setUnit as setUiUnit
 } from './ui.js';
+import { renderTrendCharts } from './charts.js';
 
 // Bump on each user-visible release. Also bump APP_VERSION in sw.js so caches invalidate.
-const WWADS_VERSION = 'v15';
+const WWADS_VERSION = 'v16';
 const versionTextEl = document.getElementById('version-text');
 if (versionTextEl) versionTextEl.textContent = `wwads ${WWADS_VERSION}`;
 
@@ -34,6 +35,8 @@ const currentEl   = $('#current');
 const nextHourEl  = $('#next-hour');
 const hourlyEl    = $('#hourly');
 const dailyEl     = $('#daily');
+const chartTempEl = $('#chart-temp');
+const chartRainEl = $('#chart-rain');
 
 let currentTab = 'forecast';
 let lastFetchedCityId = null;
@@ -133,6 +136,7 @@ async function loadForecast(city, { background = false } = {}) {
     renderNextHourRain(nextHourEl, data);
     renderHourly(hourlyEl, data);
     renderDaily(dailyEl, data);
+    renderTrendCharts(chartTempEl, chartRainEl, data.chart, store.state.unit);
   } catch (err) {
     console.error('Forecast failed:', err);
     if (background) return; // keep the previous render rather than wiping it
@@ -273,6 +277,7 @@ function rerenderForecast() {
     renderNextHourRain(nextHourEl, lastForecast);
     renderHourly(hourlyEl, lastForecast);
     renderDaily(dailyEl, lastForecast);
+    renderTrendCharts(chartTempEl, chartRainEl, lastForecast.chart, store.state.unit);
   }
 }
 

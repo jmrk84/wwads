@@ -1,4 +1,4 @@
-const APP_VERSION = 'v15';
+const APP_VERSION = 'v16';
 const SHELL_CACHE = `wwads-shell-${APP_VERSION}`;
 const DATA_CACHE  = `wwads-data-${APP_VERSION}`;
 const TILE_CACHE  = `wwads-tiles-${APP_VERSION}`;
@@ -13,6 +13,9 @@ const SHELL_FILES = [
   'weather.js',
   'ui.js',
   'radar.js',
+  'charts.js',
+  'vendor/uplot/uPlot.min.css',
+  'vendor/uplot/uPlot.iife.min.js',
   'vendor/leaflet/leaflet.css',
   'vendor/leaflet/leaflet.js',
   'vendor/leaflet/images/marker-icon.png',

@@ -12,6 +12,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="vendor/uplot/uPlot.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -42,6 +43,16 @@
     <section id="forecast-view" class="view" hidden>
       <div class="current" id="current"></div>
       <div class="next-hour" id="next-hour"></div>
+      <h2 class="section-title">5-day temperature</h2>
+      <div class="chart-panel"><div id="chart-temp" class="chart"></div></div>
+      <h2 class="section-title">5-day rain</h2>
+      <div class="chart-panel">
+        <div id="chart-rain" class="chart"></div>
+        <div class="chart-legend">
+          <span class="chart-note">height = chance · color = intensity</span>
+          <span class="chart-legend-grp"><span>light</span><span class="chart-legend-bar" aria-hidden="true"></span><span>heavy</span></span>
+        </div>
+      </div>
       <h2 class="section-title">Next 24 hours</h2>
       <div class="hourly" id="hourly"></div>
       <h2 class="section-title">5-day forecast</h2>

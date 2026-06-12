@@ -321,6 +321,43 @@ main {
   font-weight: 600;
 }
 
+/* ===== Trend charts (uPlot) ===== */
+.chart-panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 8px 10px 6px;
+}
+.chart {
+  width: 100%;
+  min-height: 126px;
+}
+.chart-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.chart-legend-grp { display: flex; align-items: center; gap: 6px; }
+.chart-legend-bar {
+  width: 70px;
+  height: 7px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #dce8f5, #86bdeb, #4f93da, #2f5fc0, #333aa6, #6a2fae);
+}
+.chart-note { color: var(--text-muted); }
+.chart-fallback {
+  padding: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.uplot, .uplot * { box-sizing: border-box; }
+
 /* ===== Hourly strip ===== */
 .hourly {
   display: flex;
