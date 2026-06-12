@@ -70,6 +70,14 @@ export function getUnit() { return _unit; }
 export function toDisplay(c) { return _unit === 'f' ? c * 9 / 5 + 32 : c; }
 export function unitSuffix() { return _unit === 'f' ? '°F' : '°C'; }
 
+// Map a temperature (always °C, so colors stay physically meaningful regardless
+// of the display unit) onto a cold-blue → hot-red hue ramp for the range bars.
+function tempColor(c) {
+  const t = Math.max(-10, Math.min(38, c));
+  const hue = 220 - ((t + 10) / 48) * 220; // -10°C → 220 (blue), 38°C → 0 (red)
+  return `hsl(${hue.toFixed(0)}, 72%, 52%)`;
+}
+
 export function fmtTemp(t) { return t == null ? '—' : `${Math.round(toDisplay(t))}°`; }
 export function fmtTempFull(t) { return t == null ? '—' : `${Math.round(toDisplay(t))}${unitSuffix()}`; }
 
@@ -212,26 +220,47 @@ export function renderDaily(container, data) {
     container.innerHTML = `<div style="padding:12px;color:var(--text-muted)">No daily data.</div>`;
     return;
   }
+  // Map each day's low→high onto the whole week's range so the bars are
+  // comparable across rows (the Apple/Pixel "shape of the week" pattern).
+  let weekMin = Infinity, weekMax = -Infinity;
+  for (const d of days) {
+    if (d.tmin != null) weekMin = Math.min(weekMin, d.tmin);
+    if (d.tmax != null) weekMax = Math.max(weekMax, d.tmax);
+  }
+  if (!isFinite(weekMin) || !isFinite(weekMax)) { weekMin = 0; weekMax = 1; }
+  const span = (weekMax - weekMin) || 1;
+  const curTemp = data.current?.temperature_2m;
+
   container.innerHTML = days.map((d, i) => {
     const info = weatherInfo(d.code, true);
-    const probTxt = (d.precipProb ?? 0) >= 10 ? `${emojiImg('💧')}${d.precipProb}%` : '';
-    const mmTxt = (d.precipMm ?? 0) > 0 ? `${d.precipMm.toFixed(1)} mm` : '';
-    const precipLine = [probTxt, mmTxt].filter(Boolean).join(' · ');
-    const dewLine = (d.dewDayMean != null || d.dewNightMean != null)
-      ? `<div class="day-dew">
-           <span class="day-dew-label">dew</span>
-           <span class="day-dew-day">${d.dewDayMean != null ? fmtTemp(d.dewDayMean) : '—'}</span>
-           <span class="day-dew-night">${d.dewNightMean != null ? fmtTemp(d.dewNightMean) : '—'}</span>
-         </div>`
+
+    let bar = '';
+    if (d.tmin != null && d.tmax != null) {
+      const leftPct = ((d.tmin - weekMin) / span) * 100;
+      const rightPct = ((weekMax - d.tmax) / span) * 100;
+      const grad = `linear-gradient(to right, ${tempColor(d.tmin)}, ${tempColor(d.tmax)})`;
+      let dot = '';
+      if (i === 0 && curTemp != null) {
+        const dotPct = Math.max(0, Math.min(100, ((curTemp - weekMin) / span) * 100));
+        dot = `<span class="day-bar-dot" style="left:${dotPct}%" title="Now ${fmtTemp(curTemp)}"></span>`;
+      }
+      bar = `<span class="day-bar-fill" style="left:${leftPct.toFixed(1)}%;right:${rightPct.toFixed(1)}%;background:${grad}"></span>${dot}`;
+    }
+
+    const probTxt = (d.precipProb ?? 0) >= 10 ? `<span class="s-precip">${emojiImg('💧')}${d.precipProb}%</span>` : '';
+    const dewTxt = (d.dewDayMean != null || d.dewNightMean != null)
+      ? `<span class="s-dew">dew <strong>${d.dewDayMean != null ? fmtTemp(d.dewDayMean) : '—'}</strong> / ${d.dewNightMean != null ? fmtTemp(d.dewNightMean) : '—'}</span>`
       : '';
+    const sub = (probTxt || dewTxt) ? `<div class="day-sub">${probTxt}${dewTxt}</div>` : '';
+
     return `
       <div class="day">
-        <div class="day-name">${escapeHtml(fmtDay(d.date, i))}</div>
-        <div class="day-icon" title="${escapeHtml(info.label)}">${emojiImg(info.icon)}</div>
-        <div class="day-precip">${precipLine}${dewLine}</div>
-        <div class="day-temps">
-          <span class="hi">${fmtTemp(d.tmax)}</span><span class="lo">${fmtTemp(d.tmin)}</span>
-        </div>
+        <span class="day-name">${escapeHtml(fmtDay(d.date, i))}</span>
+        <span class="day-icon" title="${escapeHtml(info.label)}">${emojiImg(info.icon)}</span>
+        <span class="day-lo">${fmtTemp(d.tmin)}</span>
+        <div class="day-bar">${bar}</div>
+        <span class="day-hi">${fmtTemp(d.tmax)}</span>
+        ${sub}
       </div>
     `;
   }).join('');
