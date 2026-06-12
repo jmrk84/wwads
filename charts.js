@@ -9,7 +9,9 @@ const TEXT_COL = '#5b6b85';
 const GRID_COL = 'rgba(20,40,80,0.08)';
 const AXIS_FONT = '11px -apple-system, system-ui, sans-serif';
 const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-const CHART_H = 96;
+const CHART_H = 92;
+// Trim uPlot's default plot padding so the panels sit tight: [top, right, bottom, left].
+const CHART_PAD = [4, 6, 0, 0];
 
 let uplotLoading = null;
 function ensureUplot() {
@@ -35,9 +37,11 @@ function dayAxis(midnights) {
     splits: (u, ai, min, max) => midnights.filter(t => t >= min && t <= max),
     values: (u, sp) => sp.map(fmtDay) };
 }
-function tempYAxis(unit) {
+function tempYAxis(unit, tMin, tMax) {
   return { scale: 'y', stroke: TEXT_COL, font: AXIS_FONT, size: 34,
     grid: { stroke: GRID_COL, width: 1 }, ticks: { stroke: GRID_COL, width: 1, size: 3 },
+    // Exactly two labels: the window's min and max temperature.
+    splits: [tMin, tMax],
     values: (u, sp) => sp.map(v => Math.round(unit === 'f' ? v * 9 / 5 + 32 : v) + '°') };
 }
 function rainYAxis() {
@@ -122,9 +126,15 @@ export async function renderTrendCharts(tempEl, rainEl, chart, unit) {
   const wT = tempEl.clientWidth || 320;
   const wR = rainEl.clientWidth || 320;
 
+  const temps = chart.temp.filter(v => v != null);
+  const tMin = temps.length ? Math.min(...temps) : 0;
+  const tMax = temps.length ? Math.max(...temps) : 1;
+  const tPad = Math.max(0.5, (tMax - tMin) * 0.08);
+
   uTemp = new uPlot({
-    width: wT, height: CHART_H, cursor: { points: { size: 5 } }, legend: { show: false },
-    scales: { x: { time: true }, y: {} }, axes: [dayAxis(midnights), tempYAxis(unit)],
+    width: wT, height: CHART_H, padding: CHART_PAD, cursor: { points: { size: 5 } }, legend: { show: false },
+    scales: { x: { time: true }, y: { range: [tMin - tPad, tMax + tPad] } },
+    axes: [dayAxis(midnights), tempYAxis(unit, tMin, tMax)],
     series: [{}, {
       stroke: u => gradV(u, TSTOPS),
       fill: u => gradV(u, TFILL),
@@ -134,7 +144,7 @@ export async function renderTrendCharts(tempEl, rainEl, chart, unit) {
   }, [chart.t, chart.temp], tempEl);
 
   uRain = new uPlot({
-    width: wR, height: CHART_H, cursor: { points: { size: 5 } }, legend: { show: false },
+    width: wR, height: CHART_H, padding: CHART_PAD, cursor: { points: { size: 5 } }, legend: { show: false },
     scales: { x: { time: true }, y: { range: [0, 100] } }, axes: [dayAxis(midnights), rainYAxis()],
     series: [{}, {
       stroke: 'rgba(38,49,143,0.55)',

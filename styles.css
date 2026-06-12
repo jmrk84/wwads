@@ -326,11 +326,11 @@ main {
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 8px 10px 6px;
+  padding: 4px 8px 5px;
 }
 .chart {
   width: 100%;
-  min-height: 126px;
+  min-height: 92px;
 }
 .chart-legend {
   display: flex;
