@@ -8,7 +8,7 @@ import {
 import { renderTrendCharts } from './charts.js';
 
 // Bump on each user-visible release. Also bump APP_VERSION in sw.js so caches invalidate.
-const WWADS_VERSION = 'v17';
+const WWADS_VERSION = 'v18';
 const versionTextEl = document.getElementById('version-text');
 if (versionTextEl) versionTextEl.textContent = `wwads ${WWADS_VERSION}`;
 

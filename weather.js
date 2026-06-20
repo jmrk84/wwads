@@ -107,11 +107,13 @@ export async function fetchForecast({ lat, lon }) {
     dewNightMean: meanOf(dewByDate[date]?.night)
   }));
 
-  // 5-day hourly series for the trend charts (temperature °C, precip
-  // probability %, precip amount mm). x is UTC-parsed seconds.
-  const chartN = Math.min(allHours.length, 120);
+  // Hourly series for the trend charts, starting at the current hour so the
+  // split axis can give the next 24 h its own half. ~5 days, x = UTC-parsed
+  // seconds; values stay in °C / % / mm.
+  const chartN = Math.min(allHours.length - startIdx, 120);
   const chart = { t: [], temp: [], pop: [], mm: [] };
-  for (let i = 0; i < chartN; i++) {
+  for (let k = 0; k < chartN; k++) {
+    const i = startIdx + k;
     chart.t.push(toUtcSec(allHours[i]));
     chart.temp.push(data.hourly.temperature_2m?.[i] ?? null);
     chart.pop.push(data.hourly.precipitation_probability?.[i] ?? 0);
